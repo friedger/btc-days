@@ -2,23 +2,21 @@ import fs from "fs";
 import { fetchPrivate } from "@stacks/common";
 import { webcrypto } from "crypto";
 
-const boomIds = [
-  5193, 5201, 5202, 5426, 5204, 5203, 5236, 5237, 5238, 5239, 5240, 5241, 5242,
-  5243, 5244, 5351, 5352, 5439, 5329, 5330, 5403, 5404, 5405, 5423, 5422, 5406,
-  5459, 5424, 5425, 5458, 5460, 5461, 5462, 5463, 5464, 5536, 5537, 5538, 5539,
-  5540, 5541, 5542, 5543, 5544, 5545, 5546, 5559, 5560, 5593, 5592,
-];
+const boomIds = [1, 5535, 5957, 5587, 5588, 5615, 5632];
 const attributes = {
-  4: "Clone 1",
-  5: "Clone 2",
-  14: "Twin 1",
-  18: "Twin 2",
+  7: "D7 One self-paying loan away from freedom. Small loan for man, big loan for humanibtc.",
+  6: "D6 Golden reflections. You will be long a city, artist and Community.",
+  5: "D5 Sunrise run. Meditation thru Diko's lenses. He gives an unthinkable hand.",
+  4: "D4 New beginnings under the clouds: close up on the life cycles of empires.",
+  3: "D3 100 miles minus 7. Shush! Doing it right!",
+  2: "D2 14.5 miles. Hope is in the wind.",
+  1: "D1 Day one will also be day end.",
 };
 
 async function readMetadata() {
-  const content = fs.readFileSync("./data/exported-metadata.csv").toString();
+  const content = fs.readFileSync("./data/exported-txs.csv").toString();
   const lines = content.split("\n");
-  let rocks = lines
+  let days = lines
     .filter((l) => l)
     .map((l) => {
       const fields = l.split(",");
@@ -34,12 +32,13 @@ async function readMetadata() {
         imageUrl,
       };
     });
-  rocks = rocks.filter((r) => boomIds.find((id) => id === r.boomId));
-  rocks = boomIds.map((id, index) => {
-    const rock = rocks.find((r) => r.boomId === id);
-    return { ...rock, id: index + 1 };
+  days = days.filter((r) => boomIds.find((id) => id === r.boomId));
+  days = boomIds.map((id, index) => {
+    const day = days.find((r) => r.boomId === id);
+    return { ...day, id: index + 1 };
   });
-  return rocks;
+
+  return days;
 }
 
 async function urlContentToDataUri(data) {
@@ -53,15 +52,19 @@ async function digest(imageDataUrl) {
     Buffer.from(await imageDataUrl, "base64")
   );
 }
-async function downloadImages(rocks) {
+async function downloadImages(days) {
   const hashToId = {};
-  for (let r of rocks) {
+  for (let r of days) {
+    console.log(r);
+    if (!r.imageUrl) {
+      continue;
+    }
     const response = await fetchPrivate(r.imageUrl);
     const data = await response.buffer();
     const dataUri = await urlContentToDataUri(data);
     const hash = await digest(dataUri);
 
-    fs.writeFileSync(`data/rock${r.id}.jpeg`, data);
+    fs.writeFileSync(`data/metadata/nfts/day${r.id}.jpeg`, data);
     const hashString = Buffer.from(hash).toString("hex");
     if (hashToId[hashString]) {
       console.log("**** " + hashToId[hashString]);
@@ -72,15 +75,15 @@ async function downloadImages(rocks) {
     }
   }
 }
-function getName(rock) {
-  if (attributes[rock.id]) {
-    return rock.name + " " + attributes[rock.id];
+function getName(day) {
+  if (attributes[day.id]) {
+    return attributes[day.id];
   } else {
-    return rock.name;
+    return day.name;
   }
 }
 
-function writeMetadata(rocks) {
+function writeMetadata(days) {
   try {
     fs.rmSync("data/metadata/metadata", { recursive: true });
   } catch (e) {
@@ -88,15 +91,15 @@ function writeMetadata(rocks) {
   }
 
   fs.mkdirSync("data/metadata/metadata", { recursive: true });
-  for (let r of rocks) {
+  for (let r of days) {
     fs.writeFileSync(
       `data/metadata/metadata/${r.id}.json`,
       JSON.stringify({
         version: 1,
         name: getName(r),
-        image: `ipfs://QmQhmPbVbXYnSTk7Z3i6GmiAYyL75ys1ZrJPNnXnBs4ch4/rock${r.id}.jpeg`,
+        image: `ipfs://QmQhmPbVbXYnSTk7Z3i6GmiAYyL75ys1ZrJPNnXnBs4ch4/day${r.id}.jpeg`,
         properties: {
-          collection: "BTC Rocks",
+          collection: "BTC Days",
           creator: { type: "string", value: "Benny Cage" },
           boomId: { type: "number", value: r.boomId },
           boomHash: { type: "string", value: r.hash },
@@ -106,8 +109,8 @@ function writeMetadata(rocks) {
   }
 }
 
-readMetadata().then((rocks) => {
-  console.log(rocks.length);
-  //downloadImages(rocks);
-  writeMetadata(rocks);
+readMetadata().then((days) => {
+  console.log(days.length);
+  downloadImages(days);
+  writeMetadata(days);
 });
