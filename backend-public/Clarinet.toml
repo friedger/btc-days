@@ -1,5 +1,6 @@
 [project]
 name = "btc-days"
+boot_contracts = ["bns", "costs_v2", "pox"]
 
 [repl]
 costs_version = 2
