@@ -14,13 +14,13 @@
     (try! (contract-call? 'SP497E7RX3233ATBS2AB9G4WTHB63X5PBSP5VGAQ.boom-nfts burn boom-id))
     (contract-call? .btc-days upgrade id)))
 
-;; 1 <= id <= 50
+;; 1 <= id <= 7
 (define-read-only (to-boom (id uint))
   (element-at btc-days (- id u1)))
 
 (define-constant btc-days
   (list
-    u0 u5535 u5957 u5587 u5588 u5615 u5632))
+    u1 u5535 u5957 u5587 u5588 u5615 u5632))
 
 (contract-call? .btc-days set-mint)
 

@@ -26,12 +26,9 @@
 (define-public (buy-in-ustx (id uint) (comm <commission-trait>))
   (let ((owner (unwrap! (unwrap! (contract-call? .btc-days get-owner id) err-not-found) err-not-found))
       (listing (unwrap! (map-get? market id) err-listing))
-      (floor (contract-call? .btc-days get-floor))
       (price (get price listing)))
     (asserts! (is-eq (contract-of comm) (get commission listing)) err-invalid-commission)
-    (asserts! (> price floor) err-price-too-low)
-    ;; Rule seller gets price minus contract floor
-    (try! (stx-transfer? (- price floor) tx-sender owner))
+    (try! (stx-transfer? price tx-sender owner))
     (try! (contract-call? comm pay id price))
     (try! (contract-call? .btc-days transfer id owner tx-sender))
     (map-delete market id)
